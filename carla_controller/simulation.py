@@ -223,7 +223,10 @@ class Simulation():
     def cleanup(self):
         self.stop_recording()
         
-        self.client.apply_batch([carla.command.DestroyActor(actor) for actor in self.actors])
+        try:
+            self.client.apply_batch([carla.command.DestroyActor(actor) for actor in self.actors])
+        except:
+            pass
 
 
 # We do not want to confuse the network with people on vehicles, so we'll ignore bikes
