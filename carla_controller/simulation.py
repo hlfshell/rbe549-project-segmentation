@@ -62,6 +62,7 @@ class Simulation():
         Path(f"{self.output_directory}/{self.run_id}/semantic").mkdir(parents=True, exist_ok=True)
 
         self.actors = []
+        self.cameras = []
 
         self.default_vehicles = vehicles
         self.default_pedestrians = pedestrians
@@ -71,7 +72,6 @@ class Simulation():
     def spawn_hero_vehicle(self, spawn_point = None):
         blueprint = self.blueprint_library.find(TARGET_HERO_CAR)
         # Sunburnt Orange; the color of my first Mini
-        # print("color",blueprint.get_attribute('color').recommended_values, carla.Color(204, 85, 0))
         blueprint.set_attribute('color', str((204, 85, 0)))
 
         if spawn_point is None and self.default_hero_spawn_point is not None:
@@ -189,6 +189,7 @@ class Simulation():
         # in the middle of the air
         sleep(CAMERA_START_DELAY)
         self.attach_camera(self.hero_vehicle)
+        self.start_recording()
 
         # Finally run the simulation
         self.run(time)
@@ -200,18 +201,24 @@ class Simulation():
         camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
         camera = self.world.spawn_actor(camera_blueprint, camera_transform, attach_to=vehicle)
         camera.listen(self._rgb_camera_listener)
-        self.actors.append(camera)
+        # self.actors.append(camera)
+        self.cameras.append(camera)
         
         semantic_camera_blueprint = self.blueprint_library.find('sensor.camera.semantic_segmentation')
         semantic_camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
         semantic_camera = self.world.spawn_actor(semantic_camera_blueprint, camera_transform, attach_to=vehicle)
         semantic_camera.listen(self._semantic_camera_listener)
-        self.actors.append(semantic_camera)
+        # self.actors.append(semantic_camera)
+        self.cameras.append(semantic_camera)
 
     def _rgb_camera_listener(self, image):
+        if not self._recording:
+            return
         image.save_to_disk(f"{self.output_directory}/{self.run_id}/rgb/{image.frame}.png")
     
     def _semantic_camera_listener(self, image):
+        if not self._recording:
+            return
         image.save_to_disk(f"{self.output_directory}/{self.run_id}/semantic/{image.frame}.png")
 
     def start_recording(self):
@@ -222,11 +229,10 @@ class Simulation():
 
     def cleanup(self):
         self.stop_recording()
-        
-        try:
-            self.client.apply_batch([carla.command.DestroyActor(actor) for actor in self.actors])
-        except:
-            pass
+
+        for camera in self.cameras:
+            camera.destroy()
+        self.client.apply_batch([carla.command.DestroyActor(actor) for actor in self.actors])
 
 
 # We do not want to confuse the network with people on vehicles, so we'll ignore bikes

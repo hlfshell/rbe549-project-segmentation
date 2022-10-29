@@ -1,23 +1,30 @@
+from lib2to3.pgen2.token import NUMBER
 from simulation import Simulation
 
 from random import randrange
 
 TIME_FOR_RUN = 60
-MIN_NUMBER_VEHICLES = 50
+NUMBER_OF_RUNS = 100
+MIN_NUMBER_VEHICLES = 30
 MAX_NUMBER_VEHICLES = 200
-MIN_NUMBER_PEDESTRIANS = 30
+MIN_NUMBER_PEDESTRIANS = 20
 MAX_NUMBER_PEDESTRIANS = 100
 
-def single_run():
+def single_run() -> str:
     number_of_vehicles = randrange(MIN_NUMBER_VEHICLES, MAX_NUMBER_VEHICLES + 1)
     number_of_pedestrians = randrange(MIN_NUMBER_PEDESTRIANS, MAX_NUMBER_PEDESTRIANS + 1)
 
     simulation = Simulation(vehicles=number_of_vehicles, pedestrians=number_of_pedestrians)
     simulation.launch(TIME_FOR_RUN)
 
+    return simulation.run_id
+
 def build_dataset(runs : int):
-    for _ in range(runs):
-        single_run()
+    for i in range(runs):
+        id = single_run()
+        print(f"\t-Completed run {i+1} : {id}")
 
 if __name__ == '__main__':
-    build_dataset(100)
+    print("Running dataset collection")
+    build_dataset(NUMBER_OF_RUNS)
+    print(f"Completed running {NUMBER_OF_RUNS} runs...")
