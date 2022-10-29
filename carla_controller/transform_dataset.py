@@ -1,10 +1,11 @@
-from typing import Dict
+import carla
 import cv2
 import os
 
 import numpy as np
 from pathlib import Path
 from shutil import copy
+from typing import Dict
 
 
 SOURCE_DIRECTORY = "./output"
@@ -85,18 +86,18 @@ SEMANTIC_CATEGORIES = {
 
 SEMANTIC_COLORS = {
     "None": (0, 0, 0),
-    "Buildings": (97, 85, 44),
-    "Fences": (200, 119, 46),
-    "Other": (78, 76, 43),
-    "Pedestrians": (71, 183, 73),
-    "Poles": (30, 72, 105),
-    "RoadLines": (240, 227, 103),
-    "Roads": (38, 54, 112),
-    "Sidewalks": (242, 201, 209),
-    "Vegetation": (54, 110, 79),
-    "Vehicles": (32, 155, 199),
-    "Walls": (93, 60, 33),
-    "TrafficSigns": (245, 135, 113),
+    "Buildings": [70, 70, 70],
+    "Fences": [190, 153, 153],
+    "Other": [72, 0, 90],
+    "Pedestrians": [220, 20, 60],
+    "Poles": [153, 153, 153],
+    "RoadLines": [157, 234, 50],
+    "Roads": [128, 64, 128],
+    "Sidewalks": [244, 35, 232],
+    "Vegetation": [107, 142, 35],
+    "Vehicles": [0, 0, 255],
+    "Walls": [102, 102, 156],
+    "TrafficSigns": [220, 220, 0],
 }
 
 
