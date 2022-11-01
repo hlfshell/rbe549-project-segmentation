@@ -9,7 +9,7 @@ from typing import Dict
 
 
 SOURCE_DIRECTORY = "./output"
-DESTINATION_DIRECTORY = "./datasets"
+DESTINATION_DIRECTORY = "./dataset"
 
 
 def load_dataset_stats():
@@ -40,6 +40,8 @@ def convert_semantic_image(image_path : str):
 
         img[np.all(img == r_channel, axis=-1)] = color
     
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
     return img
 
 
