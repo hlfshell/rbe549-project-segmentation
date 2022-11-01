@@ -1,3 +1,5 @@
+from weather import random_weather
+
 import carla
 
 from pathlib import Path
@@ -27,6 +29,7 @@ class Simulation():
         pedestrians : int = DEFAULT_PEDESTRIANS,
         pedestrian_cross_percentage : float = PEDESTRIAN_CROSSING_DEFAULT,
         hero_spawn_point = None,
+        weather_params = None
     ):
         if run_id is None:
             run_id = uuid4()
@@ -44,6 +47,10 @@ class Simulation():
         self.client.load_world(map)
         # Give the map a moment to load
         sleep(MAP_LOAD_DELAY)
+
+        if weather_params == None:
+            weather_params = random_weather()
+        self.world.set_weather(weather_params)
 
         # Blueprints are things we can add to the world.
         # Request from the world what blueprints are available
@@ -68,6 +75,7 @@ class Simulation():
         self.default_pedestrians = pedestrians
         self.default_pedestrian_cross_percentage = pedestrian_cross_percentage
         self.default_hero_spawn_point = hero_spawn_point
+
 
     def spawn_hero_vehicle(self, spawn_point = None):
         blueprint = self.blueprint_library.find(TARGET_HERO_CAR)
