@@ -1,18 +1,70 @@
 import carla
 
+from carla import WeatherParameters
+from pathlib import Path
 from random import choice
 from time import sleep
+from typing import Optional
+from uuid import uuid4
+
+
+PEDESTRIAN_CROSSING_DEFAULT = 0.15
+DEFAULT_VEHICLES = 50
+DEFAULT_PEDESTRIANS = 25
+CAMERA_START_DELAY = 5
+CAMERA_SHOT_DELAY = 1.0
+MAP_LOAD_DELAY = 2.0
+DEFAULT_OUTPUT_DIRECTORY = "./output/"
 
 class Simulation():
 
 
-    def __init__(self):
+    def __init__(
+        self,
+        run_id : Optional[str] = None,
+        map : Optional[str] = None,
+        output_directory : Optional[str] = None,
+        vehicles : int = DEFAULT_VEHICLES,
+        pedestrians : int = DEFAULT_PEDESTRIANS,
+        pedestrian_cross_percentage : float = PEDESTRIAN_CROSSING_DEFAULT,
+        hero_spawn_point = None,
+        weather_params = None
+    ):
+        if run_id is None:
+            run_id = uuid4()
+        self.run_id = run_id
+
         # Create our client
         self.client = carla.Client('localhost', 2000)
         self.client.set_timeout(5.0)
 
         # Create our world object
         self.world = self.client.get_world()
+
+        if map is None:
+            map = choice(self.client.get_available_maps())
+        self.client.load_world(map)
+        # Give the map a moment to load
+        sleep(MAP_LOAD_DELAY)
+
+        if weather_params == None:
+            weather_params = choice([
+                WeatherParameters.ClearNoon,
+                WeatherParameters.CloudyNoon,
+                WeatherParameters.WetNoon,
+                WeatherParameters.WetCloudyNoon,
+                WeatherParameters.MidRainyNoon,
+                WeatherParameters.HardRainNoon,
+                WeatherParameters.SoftRainNoon,
+                WeatherParameters.ClearSunset,
+                WeatherParameters.CloudySunset,
+                WeatherParameters.WetSunset,
+                WeatherParameters.WetCloudySunset,
+                WeatherParameters.MidRainSunset,
+                WeatherParameters.HardRainSunset,
+                WeatherParameters.SoftRainSunset
+            ])
+        self.world.set_weather(weather_params)
 
         # Blueprints are things we can add to the world.
         # Request from the world what blueprints are available
@@ -22,16 +74,31 @@ class Simulation():
         self.vehicle_blueprints = [blueprint for blueprint in self.vehicle_blueprints if blueprint.id not in BANNED_VEHICLES]
 
         self._recording = False
+        if output_directory is None:
+            output_directory = DEFAULT_OUTPUT_DIRECTORY
+        self.output_directory = output_directory
+        # Ensure that the directory is created and ready to receive data
+        
+        Path(f"{self.output_directory}/{self.run_id}/rgb").mkdir(parents=True, exist_ok=True)
+        Path(f"{self.output_directory}/{self.run_id}/semantic").mkdir(parents=True, exist_ok=True)
 
         self.actors = []
+        self.cameras = []
+
+        self.default_vehicles = vehicles
+        self.default_pedestrians = pedestrians
+        self.default_pedestrian_cross_percentage = pedestrian_cross_percentage
+        self.default_hero_spawn_point = hero_spawn_point
+
 
     def spawn_hero_vehicle(self, spawn_point = None):
         blueprint = self.blueprint_library.find(TARGET_HERO_CAR)
         # Sunburnt Orange; the color of my first Mini
-        print("color",blueprint.get_attribute('color').recommended_values, carla.Color(204, 85, 0))
-        blueprint.set_attribute('color', carla.Color(204, 85, 0))
+        blueprint.set_attribute('color', str((204, 85, 0)))
 
-        if spawn_point is None:
+        if spawn_point is None and self.default_hero_spawn_point is not None:
+            spawn_point = self.default_hero_spawn_point
+        elif spawn_point is None:
             spawn_point = choice(self.world.get_map().get_spawn_points())
         
         self.hero_vehicle = self.world.spawn_actor(blueprint, spawn_point)
@@ -39,18 +106,10 @@ class Simulation():
 
         self.hero_vehicle.set_autopilot(True)
 
-        camera_blueprint = self.blueprint_library.find('sensor.camera.rgb')
-        camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
-        camera = self.world.spawn_actor(camera_blueprint, camera_transform, attach_to=self.hero_vehicle)
-        camera.listen(self._rgb_camera_listener)
-        self.actors.append(camera)
-        
-        semantic_camera_blueprint = self.blueprint_library.find('sensor.camera.semantic_segmentation')
-        semantic_camera = self.world.spawn_actor(semantic_camera_blueprint, camera_transform, attach_to=self.hero_vehicle)
-        semantic_camera.listen(self._semantic_camera_listener)
-        self.actors.append(semantic_camera)
+    def spawn_vehicles(self, count: Optional[int] = None):
+        if count is None:
+            count = self.default_vehicles
 
-    def spawn_vehicles(self, count: int):
         spawn_points = self.world.get_map().get_spawn_points()
 
         for _ in range(0, count):
@@ -64,7 +123,16 @@ class Simulation():
             npc.set_autopilot(True)
             self.actors.append(npc)
 
-    def spawn_pedestrians(self, count: int, crossing_percentage: float):
+    def spawn_pedestrians(
+        self,
+        count: Optional[int] = None,
+        crossing_percentage: Optional[float] = None
+    ):
+        if count is None:
+            count = self.default_pedestrians
+        if crossing_percentage is None:
+            crossing_percentage = self.default_pedestrian_cross_percentage
+
         walker_blueprints = self.blueprint_library.filter('walker.pedestrian.*')
 
         # 1. Find every possible spawn point
@@ -121,25 +189,63 @@ class Simulation():
         self.actors += controllers
 
     def spawn_everything(self):
-        pass
+        try:
+            self.spawn_hero_vehicle()
+            self.spawn_vehicles()
+            self.spawn_pedestrians()
+        except Exception as e:
+            raise e
+
+    def run(self, time : int):
+        try:
+            sleep(time)
+        finally:
+            self.cleanup()
+    
+    def launch(self, time : int):
+        # Spawn everything
+        self.spawn_everything()
+
+        # Wait for some amount of seconds to spawn the camera
+        # listeners; otherwise we'll have images of cars spawning
+        # in the middle of the air
+        sleep(CAMERA_START_DELAY)
+        self.attach_camera(self.hero_vehicle)
+        self.start_recording()
+
+        # Finally run the simulation
+        self.run(time)
 
     def attach_camera(self, vehicle):
-        camera_blueprint = self.blueprint_library.find('sensor.camera.rgb')
         camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+
+        camera_blueprint = self.blueprint_library.find('sensor.camera.rgb')
+        camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
+        camera_blueprint.set_attribute("image_size_x", "1920")
+        camera_blueprint.set_attribute("image_size_y", "1440")
+        camera_blueprint.set_attribute("motion_blur_intensity", str(0.0))
+        camera_blueprint.set_attribute("blur_amount", str(0.0))
         camera = self.world.spawn_actor(camera_blueprint, camera_transform, attach_to=vehicle)
-        camera.listen(lambda image : self._rgb_camera_listener(image, uuid))
-        self.actors.append(camera)
+        camera.listen(self._rgb_camera_listener)
+        self.cameras.append(camera)
         
         semantic_camera_blueprint = self.blueprint_library.find('sensor.camera.semantic_segmentation')
+        semantic_camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
+        camera_blueprint.set_attribute("image_size_x", "1920")
+        camera_blueprint.set_attribute("image_size_y", "1440")
         semantic_camera = self.world.spawn_actor(semantic_camera_blueprint, camera_transform, attach_to=vehicle)
-        semantic_camera.listen(lambda image : self._semantic_camera_listener(image, uuid))
-        self.actors.append(semantic_camera)
+        semantic_camera.listen(self._semantic_camera_listener)
+        self.cameras.append(semantic_camera)
 
     def _rgb_camera_listener(self, image):
-        pass
+        if not self._recording:
+            return
+        image.save_to_disk(f"{self.output_directory}/{self.run_id}/rgb/{image.frame}.png")
     
     def _semantic_camera_listener(self, image):
-        pass
+        if not self._recording:
+            return
+        image.save_to_disk(f"{self.output_directory}/{self.run_id}/semantic/{image.frame}.png")
 
     def start_recording(self):
         self._recording = True
@@ -149,10 +255,10 @@ class Simulation():
 
     def cleanup(self):
         self.stop_recording()
-        
+
+        for camera in self.cameras:
+            camera.destroy()
         self.client.apply_batch([carla.command.DestroyActor(actor) for actor in self.actors])
-
-
 
 
 # We do not want to confuse the network with people on vehicles, so we'll ignore bikes
