@@ -1,7 +1,6 @@
-from weather import random_weather
-
 import carla
 
+from carla import WeatherParameters
 from pathlib import Path
 from random import choice
 from time import sleep
@@ -49,7 +48,22 @@ class Simulation():
         sleep(MAP_LOAD_DELAY)
 
         if weather_params == None:
-            weather_params = random_weather()
+            choice([
+                WeatherParameters.ClearNoon,
+                WeatherParameters.CloudyNoon,
+                WeatherParameters.WetNoon,
+                WeatherParameters.WetCloudyNoon,
+                WeatherParameters.MidRainyNoon,
+                WeatherParameters.HardRainNoon,
+                WeatherParameters.SoftRainNoon,
+                WeatherParameters.ClearSunset,
+                WeatherParameters.CloudySunset,
+                WeatherParameters.WetSunset,
+                WeatherParameters.WetCloudySunset,
+                WeatherParameters.MidRainSunset,
+                WeatherParameters.HardRainSunset,
+                WeatherParameters.SoftRainSunset
+            ])
         self.world.set_weather(weather_params)
 
         # Blueprints are things we can add to the world.
