@@ -221,16 +221,20 @@ class Simulation():
 
         camera_blueprint = self.blueprint_library.find('sensor.camera.rgb')
         camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
+        camera_blueprint.set_attribute("image_size_x", "1920")
+        camera_blueprint.set_attribute("image_size_y", "1440")
+        camera_blueprint.set_attribute("motion_blur_intensity", str(0.0))
+        camera_blueprint.set_attribute("blur_amount", str(0.0))
         camera = self.world.spawn_actor(camera_blueprint, camera_transform, attach_to=vehicle)
         camera.listen(self._rgb_camera_listener)
-        # self.actors.append(camera)
         self.cameras.append(camera)
         
         semantic_camera_blueprint = self.blueprint_library.find('sensor.camera.semantic_segmentation')
         semantic_camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
+        camera_blueprint.set_attribute("image_size_x", "1920")
+        camera_blueprint.set_attribute("image_size_y", "1440")
         semantic_camera = self.world.spawn_actor(semantic_camera_blueprint, camera_transform, attach_to=vehicle)
         semantic_camera.listen(self._semantic_camera_listener)
-        # self.actors.append(semantic_camera)
         self.cameras.append(semantic_camera)
 
     def _rgb_camera_listener(self, image):
