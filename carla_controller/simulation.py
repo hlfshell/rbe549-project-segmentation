@@ -48,7 +48,7 @@ class Simulation():
         sleep(MAP_LOAD_DELAY)
 
         if weather_params == None:
-            choice([
+            weather_params = choice([
                 WeatherParameters.ClearNoon,
                 WeatherParameters.CloudyNoon,
                 WeatherParameters.WetNoon,
