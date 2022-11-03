@@ -46,6 +46,9 @@ def convert_semantic_image(image_path : str):
 
 
 def transform_dataset():
+"""
+Converts CARLAs semantic segmented images into a "human readable" image for easy observation and comparison.
+"""
     Path(f"{DESTINATION_DIRECTORY}/rgb").mkdir(parents=True, exist_ok=True)
     Path(f"{DESTINATION_DIRECTORY}/semantic").mkdir(parents=True, exist_ok=True)
     Path(f"{DESTINATION_DIRECTORY}/semantic_rgb").mkdir(parents=True, exist_ok=True)
