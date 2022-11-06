@@ -12,7 +12,7 @@ PEDESTRIAN_CROSSING_DEFAULT = 0.15
 DEFAULT_VEHICLES = 50
 DEFAULT_PEDESTRIANS = 25
 CAMERA_START_DELAY = 5
-CAMERA_SHOT_DELAY = 1.0
+FRAME_SELECTION_FREQUENCY = 60
 MAP_LOAD_DELAY = 2.0
 DEFAULT_OUTPUT_DIRECTORY = "./output/"
 
@@ -220,7 +220,6 @@ class Simulation():
         camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
 
         camera_blueprint = self.blueprint_library.find('sensor.camera.rgb')
-        camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
         camera_blueprint.set_attribute("image_size_x", "1920")
         camera_blueprint.set_attribute("image_size_y", "1440")
         camera_blueprint.set_attribute("motion_blur_intensity", str(0.0))
@@ -230,7 +229,6 @@ class Simulation():
         self.cameras.append(camera)
         
         semantic_camera_blueprint = self.blueprint_library.find('sensor.camera.semantic_segmentation')
-        semantic_camera_blueprint.set_attribute("sensor_tick", str(CAMERA_SHOT_DELAY))
         camera_blueprint.set_attribute("image_size_x", "1920")
         camera_blueprint.set_attribute("image_size_y", "1440")
         semantic_camera = self.world.spawn_actor(semantic_camera_blueprint, camera_transform, attach_to=vehicle)
@@ -238,12 +236,12 @@ class Simulation():
         self.cameras.append(semantic_camera)
 
     def _rgb_camera_listener(self, image):
-        if not self._recording:
+        if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY != 0):
             return
         image.save_to_disk(f"{self.output_directory}/{self.run_id}/rgb/{image.frame}.png")
     
     def _semantic_camera_listener(self, image):
-        if not self._recording:
+        if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY != 0):
             return
         image.save_to_disk(f"{self.output_directory}/{self.run_id}/semantic/{image.frame}.png")
 
