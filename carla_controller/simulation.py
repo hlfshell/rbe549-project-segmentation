@@ -236,12 +236,12 @@ class Simulation():
         self.cameras.append(semantic_camera)
 
     def _rgb_camera_listener(self, image):
-        if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY == 0):
+        if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY != 0):
             return
         image.save_to_disk(f"{self.output_directory}/{self.run_id}/rgb/{image.frame}.png")
     
     def _semantic_camera_listener(self, image):
-        if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY == 0):
+        if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY != 0):
             return
         image.save_to_disk(f"{self.output_directory}/{self.run_id}/semantic/{image.frame}.png")
 
