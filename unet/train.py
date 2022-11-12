@@ -5,6 +5,7 @@ from dataset import Carla
 from sklearn.model_selection import train_test_split
 from typing import Optional, Tuple
 
+from keras.models import load_model
 
 def train_unet(
         model,
@@ -13,7 +14,7 @@ def train_unet(
         img_size : Tuple[int, int] = (128,128),
         test_size : float = 0.25,
         dataset_folder : str = "./dataset",
-        checkpoint_file : str = "./checkpoints/unet.h5",
+        checkpoint_directory : str = "./checkpoints/",
         load_from_checkpoint : Optional[str] = None
     ):
 
@@ -51,7 +52,8 @@ def train_unet(
     model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
 
     callbacks = [
-        keras.callbacks.ModelCheckpoint(checkpoint_file, save_best_only=True)
+        keras.callbacks.ModelCheckpoint(f"{checkpoint_directory}/unet.h5", save_best_only=True)
+        keras.callbacks.BackupAndRestore(backup_dir="./checkpoints/")
     ]
 
     model.fit(training_generator, epochs=epochs, validation_data=validation_generator, callbacks=callbacks)
