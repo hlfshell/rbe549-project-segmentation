@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 from pathlib import Path
+from random import randint
 from shutil import copy
 from typing import Dict
 
@@ -30,7 +31,14 @@ def load_dataset_stats():
 #     stats = {}
 
 
+def random_with_N_digits(n):
+    range_start = 10**(n-1)
+    range_end = (10**n)-1
+    return randint(range_start, range_end)
+
+
 def convert_semantic_image(image_path : str):
+    # carla.ColorConveter()
     img = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
     for key in SEMANTIC_CATEGORIES.keys():
@@ -40,15 +48,19 @@ def convert_semantic_image(image_path : str):
 
         img[np.all(img == r_channel, axis=-1)] = color
     
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # # img = carla.ColorConverter(img)
+    # # img = carla.labels_to_cityscapes_palette(img)
+    # carla.util
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     return img
 
 
 def transform_dataset():
-"""
-Converts CARLAs semantic segmented images into a "human readable" image for easy observation and comparison.
-"""
+    """
+    Converts CARLAs semantic segmented images into a "human readable" image for easy observation and comparison.
+    """
     Path(f"{DESTINATION_DIRECTORY}/rgb").mkdir(parents=True, exist_ok=True)
     Path(f"{DESTINATION_DIRECTORY}/semantic").mkdir(parents=True, exist_ok=True)
     Path(f"{DESTINATION_DIRECTORY}/semantic_rgb").mkdir(parents=True, exist_ok=True)
@@ -58,13 +70,15 @@ Converts CARLAs semantic segmented images into a "human readable" image for easy
     for dir in directories:
         files = os.listdir(f"{SOURCE_DIRECTORY}/{dir}/rgb")
         for file in files:
+            id = random_with_N_digits(6)
+
             rgb_source_path = f"{SOURCE_DIRECTORY}/{dir}/rgb/{file}"
             semantic_source_path = f"{SOURCE_DIRECTORY}/{dir}/semantic/{file}"
             semantic_rgb_source_path = f"{SOURCE_DIRECTORY}/{dir}/semantic_rgb/{file}"
 
-            rgb_destination_path = f"{DESTINATION_DIRECTORY}/rgb/{file}"
-            semantic_destination_path = f"{DESTINATION_DIRECTORY}/semantic/{file}"
-            semantic_rgb_destination_path = f"{DESTINATION_DIRECTORY}/semantic_rgb/{file}"
+            rgb_destination_path = f"{DESTINATION_DIRECTORY}/rgb/{id}_{file}"
+            semantic_destination_path = f"{DESTINATION_DIRECTORY}/semantic/{id}_{file}"
+            semantic_rgb_destination_path = f"{DESTINATION_DIRECTORY}/semantic_rgb/{id}_{file}"
 
             copy(rgb_source_path, rgb_destination_path)
             copy(semantic_source_path, semantic_destination_path)
