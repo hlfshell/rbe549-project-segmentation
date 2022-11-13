@@ -1,11 +1,11 @@
-
+from tensorflow import keras
 import numpy as np
 
+# from keras.preprocessing.image import array_to_img
 from math import floor
-from PIL import Image
+from PIL import Image, ImageOps
 from skimage.transform import resize
 from typing import Optional, Tuple
-
 
 
 def infer(model, img : Image) -> np.ndarray:
@@ -23,16 +23,21 @@ def infer(model, img : Image) -> np.ndarray:
 
     img_input = rgb_image_to_input(img, input_size=input_size)
 
-    return model.predict(img_input)
+    return model.predict(img_input)[0]
 
 
 def rgb_image_to_input(img: Image, input_size : Optional[Tuple[int, int]] = None) -> np.ndarray:
+    # Ensure that we have a 3 channel RGB image (RGBA breask this)
+    img = img.convert("RGB")
+
+    # We prepare our input - a (1, w, h, 3) tensor where the first 1 is our batch size
     nn_input = np.zeros((1,) + input_size + (3,), dtype="float32")
     
+    # Resize image down
     if input_size is not None and img.size != input_size + (3,):
-        resize(np.array(img), input_size)
+        img = img.resize(input_size)
     
-    nn_input[0] = nn_input
+    nn_input[0] = img
 
     return nn_input
 
@@ -41,21 +46,25 @@ def labels_to_image(labels : np.ndarray, output_size : Optional[Tuple[int, int]]
     # Reduce dimensionality - instead of one hot encoded pixels, do a singular dimension
     mask = np.argmax(labels, axis=-1)
     
-    # This gets us to a shape of (1, width, height) - we want just (width, height)
-    mask = mask.reshape(mask.shape[1], mask.shape[2])
+    # This gets us to a shape of (width, height) - we want (width, height, 1)
+    mask = np.expand_dims(mask, axis=-1)
 
-    # Resize to the output size if necessary
+    # Convert our array to a proper image
+    img = keras.preprocessing.image.array_to_img(mask)
+
+    # Resize to the output size if necessary. Note that PIL expects a differently
+    # ordered image, so we reverse the dimensions
     if output_size is not None and output_size != labels.shape:
-        mask = resize(mask, output_size, order=0)
+        # mask = resize(mask, tuple(reversed(output_size)), order=0)
+        mask = resize(mask, output_size[::-1], order=0)
     
     # Next we convert the resized labels to an rgb set
-    img = np.zeros(mask.shape + (3,), dtype="uint8")
+    img = np.zeros(mask.shape[0:2] + (3,), dtype="uint8")
 
     for key in CLASS_COLORS.keys():
         img[np.all(mask == key, axis=-1)] = CLASS_COLORS[key]
 
-    # PIL expects height by width, so we have to adjust what we feed it
-    return Image.fromarray(img.transpose(1,0,2))
+    return Image.fromarray(img)
 
 
 def overlay_labels_on_input(img: Image, labels : np.ndarray, alpha : float = 0.4) -> Image:
