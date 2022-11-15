@@ -53,7 +53,7 @@ def train_unet(
 
     callbacks = [
         keras.callbacks.ModelCheckpoint(f"{checkpoint_directory}/unet.h5", save_best_only=True)
-        keras.callbacks.BackupAndRestore(backup_dir="./checkpoints/")
+        keras.callbacks.BackupAndRestore(backup_dir=f"{checkpoint_directory}/")
     ]
 
     model.fit(training_generator, epochs=epochs, validation_data=validation_generator, callbacks=callbacks)
