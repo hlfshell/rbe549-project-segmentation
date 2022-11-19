@@ -38,7 +38,7 @@ def train_unet(
     )
 
     training_generator = Carla(batch_size, img_size, train_rgb_paths, train_label_paths)
-    validation_generator = Carla(batch_size, img_size, validation_rgb_paths, validation_label_paths)
+    validation_generator = Carla(batch_size, img_size, validation_rgb_paths, validation_label_paths, data_augmentation=False)
 
     # Configure the model for training.
     # We use the "sparse" version of categorical_crossentropy
