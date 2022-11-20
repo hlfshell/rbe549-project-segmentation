@@ -1,10 +1,11 @@
-from tensorflow import keras
+from carla_controller.labels import SEMANTIC_COLORS
+
 import numpy as np
 
-# from keras.preprocessing.image import array_to_img
 from math import floor
-from PIL import Image, ImageOps
+from PIL import Image
 from skimage.transform import resize
+from tensorflow import keras
 from typing import Optional, Tuple
 
 
@@ -61,8 +62,8 @@ def labels_to_image(labels : np.ndarray, output_size : Optional[Tuple[int, int]]
     # Next we convert the resized labels to an rgb set
     img = np.zeros(mask.shape[0:2] + (3,), dtype="uint8")
 
-    for key in CLASS_COLORS.keys():
-        img[np.all(mask == key, axis=-1)] = CLASS_COLORS[key]
+    for key in SEMANTIC_COLORS.keys():
+        img[np.all(mask == key, axis=-1)] = SEMANTIC_COLORS[key]
 
     return Image.fromarray(img)
 
