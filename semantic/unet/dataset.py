@@ -85,19 +85,19 @@ class Carla(keras.utils.Sequence):
 
             # Isolate the red channel as that's our labels
             labels, g, b = labels_img.split()
+            # We need this as an numpy array
+            labels = np.array(labels, dtype="uint8")
+            g = np.array(g, dtype="uint8")
+            b = np.array(b, dtype="uint8")
             # Ensure that anything where the labels is not (0-22, 0, 0) -
             # which is the expected depending on the version of CARLA -
             # we set to (0, 0, 0) as a possible labeling error.
-            labels[np.all(
-                labels > len(CARLA_SEMANTIC_CATEGORY_MAPPINGS) or
-                g > 0 or
-                b > 0 
-                , axis=-1)] = 0
+            labels[np.where(labels > len(CARLA_SEMANTIC_CATEGORY_MAPPINGS))] = 0
+            labels[np.where(g > 0)] = 0
+            labels[np.where(b > 0)] = 0
             # Convert the labels to our expected labels
             for key in CARLA_SEMANTIC_CATEGORY_MAPPINGS.keys():
-                labels[np.all(labels == key, axis=-1)] = CARLA_SEMANTIC_CATEGORY_MAPPINGS[key]
-            # We need this as an numpy array
-            labels = np.array(labels, dtype="uint8")
+                labels[np.where(labels == key)] = CARLA_SEMANTIC_CATEGORY_MAPPINGS[key]
 
             # Now that we have the np array of our label image, we need to resize it down
             # to the same size as our input image - *but* we must be sure to choose an
