@@ -1,3 +1,5 @@
+from carla_controller.labels import CARLA_SEMANTIC_CATEGORY_MAPPINGS
+
 import keras
 import numpy as np
 
@@ -80,15 +82,22 @@ class Carla(keras.utils.Sequence):
             
             #  Load and prepare our labels
             labels_img = load_img(labels_path)
+
             # Isolate the red channel as that's our labels
-            labels, _, _ = labels_img.split()
+            labels, g, b = labels_img.split()
+            # Ensure that anything where the labels is not (0-22, 0, 0) -
+            # which is the expected depending on the version of CARLA -
+            # we set to (0, 0, 0) as a possible labeling error.
+            labels[np.all(
+                labels > len(CARLA_SEMANTIC_CATEGORY_MAPPINGS) or
+                g > 0 or
+                b > 0 
+                , axis=-1)] = 0
+            # Convert the labels to our expected labels
+            for key in CARLA_SEMANTIC_CATEGORY_MAPPINGS.keys():
+                labels[np.all(labels == key, axis=-1)] = CARLA_SEMANTIC_CATEGORY_MAPPINGS[key]
             # We need this as an numpy array
             labels = np.array(labels, dtype="uint8")
-            # Reduce our space forcibly to 1-13. Anything outside our
-            # expected labels get set to 3 for OTHER
-            labels[labels > 13] = 3
-            # Reduce our labels to be from 0 to 12
-            labels = labels - 1
 
             # Now that we have the np array of our label image, we need to resize it down
             # to the same size as our input image - *but* we must be sure to choose an
