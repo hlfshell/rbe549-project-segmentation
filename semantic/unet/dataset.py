@@ -1,4 +1,4 @@
-from carla_controller.labels import CARLA_SEMANTIC_CATEGORY_MAPPINGS
+from semantic.carla_controller.labels import CARLA_SEMANTIC_CATEGORY_MAPPINGS
 
 import keras
 import numpy as np
