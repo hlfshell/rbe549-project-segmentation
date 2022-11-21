@@ -26,37 +26,37 @@ SEMANTIC_CATEGORIES = {
 # Thus irregardless if it's a dataset with 0-22 or 0-13, we can map it
 # back to this
 CARLA_SEMANTIC_CATEGORY_MAPPINGS = {
-    0: 0,
-    1: 1,
-    2: 1,
-    3: 0,
-    4: 8,
-    5: 1,
-    6: 4,
-    7: 3,
-    8: 5,
-    9: 0,
-    10: 7,
-    11: 1,
-    12: 2,
-    13: 0,
-    14: 6,
-    15: 1,
-    16: 0,
-    17: 1,
-    18: 2,
-    19: 0,
-    20: 0,
-    21: 6,
-    22: 6,
+    0: 0, # Unlabeled
+    1: 1, # Building
+    2: 1, # Fence
+    3: 0, # Other
+    4: 8, # Pedestrian
+    5: 1, # Pole
+    6: 4, # RoadLine
+    7: 3, # Road
+    8: 5, # SideWalk
+    9: 0, # Vegetation
+    10: 7, # Vehicles
+    11: 1, # Wall
+    12: 2, # TrafficSign
+    13: 0, # Sky
+    14: 6, # Ground
+    15: 1, # Bridge
+    16: 0, # RailTrack
+    17: 1, # GuardRail
+    18: 2, # TrafficLight
+    19: 0, # Static
+    20: 0, # Dynamic
+    21: 6, # Water
+    22: 6, # Terrain
 }
 
 
 SEMANTIC_COLORS = {
     0: (0, 0, 0), # Unlabeled
-    1: (70, 70, 70), # Buildings
+    1: (255, 0, 0), # Buildings
     2: (220, 220, 0), # Traffic Sign/Lights
-    3: (128, 64, 128), # Roads
+    3: (0, 255, 0),#(128, 64, 128), # Roads
     4: (157, 234, 50), # Road Lines
     5: (244, 35, 232), # Sidewalk
     6: (107, 142, 35), # Ground
