@@ -1,4 +1,4 @@
-from carla_controller.labels import SEMANTIC_COLORS
+from semantic.carla_controller.labels import SEMANTIC_COLORS
 
 import numpy as np
 
@@ -50,9 +50,6 @@ def labels_to_image(labels : np.ndarray, output_size : Optional[Tuple[int, int]]
     # This gets us to a shape of (width, height) - we want (width, height, 1)
     mask = np.expand_dims(mask, axis=-1)
 
-    # Convert our array to a proper image
-    img = keras.preprocessing.image.array_to_img(mask)
-
     # Resize to the output size if necessary. Note that PIL expects a differently
     # ordered image, so we reverse the dimensions
     if output_size is not None and output_size != labels.shape:
@@ -76,21 +73,3 @@ def overlay_labels_on_input(img: Image, labels : np.ndarray, alpha : float = 0.4
     labels_img.putalpha(floor(255 * alpha))
     print(img.size, labels_img.size)
     return Image.alpha_composite(img, labels_img)
-
-
-# These labels are taken directly from CARLA
-CLASS_COLORS = {
-    0: [0, 0, 0],         # None
-    1: [70, 70, 70],      # Buildings
-    2: [190, 153, 153],   # Fences
-    3: [72, 0, 90],       # Other
-    4: [220, 20, 60],     # Pedestrians
-    5: [153, 153, 153],   # Poles
-    6: [157, 234, 50],    # RoadLines
-    7: [128, 64, 128],    # Roads
-    8: [244, 35, 232],    # Sidewalks
-    9: [107, 142, 35],    # Vegetation
-    10: [0, 0, 255],      # Vehicles
-    11: [102, 102, 156],  # Walls
-    12: [220, 220, 0]     # TrafficSigns
-}
