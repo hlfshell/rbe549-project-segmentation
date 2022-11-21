@@ -92,12 +92,13 @@ class Carla(keras.utils.Sequence):
             # Ensure that anything where the labels is not (0-22, 0, 0) -
             # which is the expected depending on the version of CARLA -
             # we set to (0, 0, 0) as a possible labeling error.
-            labels[np.where(labels > len(CARLA_SEMANTIC_CATEGORY_MAPPINGS))] = 0
+            labels[np.where(labels >= len(CARLA_SEMANTIC_CATEGORY_MAPPINGS))] = 0
             labels[np.where(g > 0)] = 0
             labels[np.where(b > 0)] = 0
+            labels_final = np.zeros_like(labels)
             # Convert the labels to our expected labels
             for key in CARLA_SEMANTIC_CATEGORY_MAPPINGS.keys():
-                labels[np.where(labels == key)] = CARLA_SEMANTIC_CATEGORY_MAPPINGS[key]
+                labels_final[np.where(labels == key)] = CARLA_SEMANTIC_CATEGORY_MAPPINGS[key]
 
             # Now that we have the np array of our label image, we need to resize it down
             # to the same size as our input image - *but* we must be sure to choose an
@@ -105,7 +106,7 @@ class Carla(keras.utils.Sequence):
             # since that would be meaningless in a labels approach. This is what order=0
             # is doing below.
             # https://scikit-image.org/docs/dev/api/skimage.transform.html#skimage.transform.resize
-            labels = resize(labels, self.img_size, order=0)
+            labels = resize(labels_final, self.img_size, order=0)
 
             # labels is (x, y) and we want labels to be (x, y, 1) in shape
             labels = np.expand_dims(labels, 2)
