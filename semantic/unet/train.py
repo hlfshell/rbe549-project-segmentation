@@ -1,7 +1,8 @@
 import keras
 import os
 
-from dataset import Carla
+from semantic.unet.dataset import Carla
+
 from sklearn.model_selection import train_test_split
 from typing import Optional, Tuple
 
