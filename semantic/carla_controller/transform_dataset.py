@@ -38,7 +38,6 @@ def random_with_N_digits(n):
 
 
 def convert_semantic_image(image_path : str):
-    # carla.ColorConveter()
     img = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
     for key in SEMANTIC_CATEGORIES.keys():
@@ -47,11 +46,7 @@ def convert_semantic_image(image_path : str):
         color = SEMANTIC_COLORS[category]
 
         img[np.all(img == r_channel, axis=-1)] = color
-    
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    # # img = carla.ColorConverter(img)
-    # # img = carla.labels_to_cityscapes_palette(img)
-    # carla.util
+
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     return img
@@ -74,7 +69,6 @@ def transform_dataset():
 
             rgb_source_path = f"{SOURCE_DIRECTORY}/{dir}/rgb/{file}"
             semantic_source_path = f"{SOURCE_DIRECTORY}/{dir}/semantic/{file}"
-            semantic_rgb_source_path = f"{SOURCE_DIRECTORY}/{dir}/semantic_rgb/{file}"
 
             rgb_destination_path = f"{DESTINATION_DIRECTORY}/rgb/{id}_{file}"
             semantic_destination_path = f"{DESTINATION_DIRECTORY}/semantic/{id}_{file}"

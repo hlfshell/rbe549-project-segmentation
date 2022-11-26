@@ -1,10 +1,12 @@
 import keras
 import os
 
-from dataset import Carla
-from sklearn.model_selection import train_test_split
-from typing import Tuple
+from semantic.unet.dataset import Carla
 
+from sklearn.model_selection import train_test_split
+from typing import Optional, Tuple
+
+from keras.models import load_model
 
 def train_unet(
         model,
@@ -12,8 +14,13 @@ def train_unet(
         batch_size : int,
         img_size : Tuple[int, int] = (128,128),
         test_size : float = 0.25,
-        dataset_folder : str = "./dataset"
+        dataset_folder : str = "./dataset",
+        checkpoint_directory : str = "./checkpoints/",
+        load_from_checkpoint : Optional[str] = None
     ):
+
+    if load_from_checkpoint is not None:
+        model.load_weights(load_from_checkpoint)
     
     rgb_folder = f"{dataset_folder}/rgb"
     rgb_paths = sorted(
@@ -46,7 +53,8 @@ def train_unet(
     model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
 
     callbacks = [
-        keras.callbacks.ModelCheckpoint("carla_segmentation.h5", save_best_only=True)
+        keras.callbacks.ModelCheckpoint(f"{checkpoint_directory}/unet.h5", save_best_only=True)
+        keras.callbacks.BackupAndRestore(backup_dir=f"{checkpoint_directory}/")
     ]
 
     model.fit(training_generator, epochs=epochs, validation_data=validation_generator, callbacks=callbacks)
