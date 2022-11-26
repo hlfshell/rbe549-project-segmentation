@@ -1,4 +1,5 @@
-from carla_controller.labels import CARLA_SEMANTIC_CATEGORY_MAPPINGS
+from semantic.carla_controller.labels import CARLA_SEMANTIC_CATEGORY_MAPPINGS
+import semantic.unet.utils
 
 import keras
 import numpy as np
@@ -103,10 +104,10 @@ class Carla(keras.utils.Sequence):
             # Now that we have the np array of our label image, we need to resize it down
             # to the same size as our input image - *but* we must be sure to choose an
             # interpolation that uses nearest neighbor and avoids any kind of averaging
-            # since that would be meaningless in a labels approach. This is what order=0
-            # is doing below.
+            # since that would be meaningless in a labels approach. This is what order=0,
+            # preserve_range=True, and anti_aliasing=False is doing below.
             # https://scikit-image.org/docs/dev/api/skimage.transform.html#skimage.transform.resize
-            labels = resize(labels_final, self.img_size, order=0)
+            labels = resize(labels_final, self.img_size, order=0, preserve_range=True, anti_aliasing=False)
 
             # labels is (x, y) and we want labels to be (x, y, 1) in shape
             labels = np.expand_dims(labels, 2)
