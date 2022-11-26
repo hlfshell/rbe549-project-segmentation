@@ -1,6 +1,6 @@
-from carla_controller.labels import SEMANTIC_CATEGORIES
-from unet.model import get_unet
-from unet.train import train_unet
+from semantic.carla_controller.labels import SEMANTIC_CATEGORIES
+from semantic.unet.model import get_unet
+from semantic.unet.train import train_unet
 
 from datetime import datetime
 
