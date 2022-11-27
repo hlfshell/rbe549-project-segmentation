@@ -1,6 +1,8 @@
 
 output/*
 dataset/*
+unet_model/*
+.idea/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
