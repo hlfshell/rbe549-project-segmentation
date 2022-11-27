@@ -12,6 +12,18 @@ SEMANTIC_CATEGORIES = {
     8: "Pedestrians",
 }
 
+SEMANTIC_COLORS = {
+    0: (0, 0, 0), # Unlabeled
+    1: (255, 0, 0), # Buildings
+    2: (220, 220, 0), # Traffic Sign/Lights
+    3: (0, 255, 0),#(128, 64, 128), # Roads
+    4: (157, 234, 50), # Road Lines
+    5: (244, 35, 232), # Sidewalk
+    6: (107, 142, 35), # Ground
+    7: (0, 0, 255), # Vehicles
+    8: (220, 20, 60), # Pedestrians
+}
+
 
 # By default, CARLA has a set number of categories, but depending on what
 # version, a different number of labels. The default documentation
@@ -51,15 +63,29 @@ CARLA_SEMANTIC_CATEGORY_MAPPINGS = {
     22: 6, # Terrain
 }
 
-
-SEMANTIC_COLORS = {
-    0: (0, 0, 0), # Unlabeled
-    1: (255, 0, 0), # Buildings
-    2: (220, 220, 0), # Traffic Sign/Lights
-    3: (0, 255, 0),#(128, 64, 128), # Roads
-    4: (157, 234, 50), # Road Lines
-    5: (244, 35, 232), # Sidewalk
-    6: (107, 142, 35), # Ground
-    7: (0, 0, 255), # Vehicles
-    8: (220, 20, 60), # Pedestrians
+# These are the default colors set by CARLA for its semantic categories
+CARLA_SEMANTIC_COLORS = {
+    0: (0, 0, 0),
+    1: (70, 70, 70),
+    2: (100, 40, 40),
+    3: (55, 90, 80),
+    4: (220, 20, 60),
+    5: (153, 153, 153),
+    6: (157, 234, 50),
+    7: (128, 64, 128),
+    8: (244, 35, 232),
+    9: (107, 142, 35),
+    10: (0, 0, 142),
+    11: (102, 102, 156),
+    12: (220, 220, 0),
+    13: (70, 130, 180),
+    14: (81, 0, 81),
+    15: (150, 100, 100),
+    16: (230, 150, 140),
+    17: (180, 165, 180),
+    18: (250, 170, 30),
+    19: (110, 190, 160),
+    20: (170, 120, 50),
+    21: (45, 60, 150),
+    22: (145, 170, 100),
 }
