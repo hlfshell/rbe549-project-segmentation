@@ -1,6 +1,7 @@
 from semantic.carla_controller.labels import SEMANTIC_COLORS
 
 import numpy as np
+import os
 
 from math import floor
 from PIL import Image
@@ -73,3 +74,60 @@ def overlay_labels_on_input(img: Image, labels : np.ndarray, alpha : float = 0.4
     labels_img.putalpha(floor(255 * alpha))
     print(img.size, labels_img.size)
     return Image.alpha_composite(img, labels_img)
+
+
+def get_image_with_high_res_center(model, img : Image, zoom : float = 2, output_dir: str = "output") -> np.ndarray:
+    # Create the output directory if it does not exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Get input size of network
+    input_size = model.layers[0].get_output_at(0).get_shape().as_list()
+    # input_size is a list with the following options:
+    # [batch_size (None), width, height, channels]. Really we just want
+    # width and height:
+    input_size = (input_size[1], input_size[2])
+
+    # Get the low res image as an input for the model
+    low_res_input = rgb_image_to_input(img, input_size=input_size)
+
+    # Get the dimensions of the original image
+    height, width = img.size
+    # print(img.size)
+
+    # Determine the crop points based on the zoom level
+    crop_points = (
+        int(height/2-height/(2*zoom)),
+        int(width/2-width/(2*zoom)),
+        int(height/2+height/(2*zoom)),
+        int(width/2+width/(2*zoom))
+    )
+    # print(crop_points)
+
+    # Crop the image to allow for a zoomed and higher resolution image and convert for model input
+    img_cropped = img.crop(crop_points)
+    # print(img_cropped.size)
+    high_res_input = rgb_image_to_input(img_cropped, input_size=input_size)
+
+    # Make predictions of both low- and high-res images
+    low_res_output_labels = model.predict(low_res_input)[0]
+    high_res_output_labels = model.predict(high_res_input)[0]
+
+    # Convert both model predictions into images
+    final_image = labels_to_image(low_res_output_labels, img.size)
+    final_image_cropped = labels_to_image(high_res_output_labels, img_cropped.size)
+
+    # Save some images to help debug
+    img.resize(input_size).save(os.path.join(output_dir, "img.png"))  # original image
+    img_cropped.resize(input_size).save(os.path.join(output_dir, "img_cropped.png"))  # original cropped image
+    final_image.save(os.path.join(output_dir, "final_image1.png"))  # Output of original image
+    final_image_cropped.save(os.path.join(output_dir, "final_image_2.png"))  # Output of cropped image
+
+    # Paste the cropped image into the center of the original image and save it
+    img_w, img_h = final_image_cropped.size
+    bg_w, bg_h = final_image.size
+    offset = ((bg_w - img_w) // 2, (bg_h - img_h) // 2)
+    fi3 = final_image
+    fi3.paste(final_image_cropped, offset)
+    fi3.save(os.path.join(output_dir, "fi3.png"))
+
