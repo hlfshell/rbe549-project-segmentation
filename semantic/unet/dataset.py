@@ -111,19 +111,19 @@ class Carla(keras.utils.Sequence):
             labels_path = batch_target_paths[index]
 
             # Load our RGB image
-            img = load_img(img_path, target_size=self.img_size)
-            # img = load_img(img_path)
+            # img = load_img(img_path, target_size=self.img_size)
+            img = load_img(img_path)
             
             #  Load and prepare our labels
             labels_img = load_img(labels_path)
 
-            # if self.apply_augmentation:
-            #     #50% chance of using the original 600x800 image or a smaller zoomed image
-            #     # if randint(0,1):
-            #     img, labels_img = self.zoom(img, labels_img)
+            if self.apply_augmentation:
+                #50% chance of using the original 600x800 image or a smaller zoomed image
+                if randint(0,1):
+                    img, labels_img = self.zoom(img, labels_img)
             
             # Resize the RGB image
-            # img = img.resize(self.img_size)
+            img = img.resize(self.img_size)
 
             # Isolate the red channel as that's our labels
             labels, g, b = labels_img.split()
