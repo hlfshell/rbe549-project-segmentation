@@ -12,6 +12,32 @@ from typing import Tuple
 
 import skimage
 
+def zoom(image, truth):
+    #inputs:    image-np array image 600x800x3
+    #           truth-np array ground truth 600x800x3
+    #process:   takes a subselection of 256x256 or 512x512 of the image
+    #           and the corresponding subselection of ground truth from across the 
+    #           middle of the input image (middle bc the highest density of interesting
+    #           items showed in the middle)
+    #outputs:   rgb_sel- 256x256 or 512x512 selection of image
+    #           truth_sel-corresponding selection of truth
+    
+    if randint(0,1):         #select 256x256 option
+        step=68
+        image_size=256       
+    else:                   #512x512 option
+        step=36
+        image_size=512
+    
+    num_steps=randint(0,8)
+    image_center_x=int(image.shape[0]/2)
+    upper_x=int(image_center_x-image_size/2)
+    lower_x=int(image_center_x+image_size/2)
+
+    small_rgb=image[upper_x:lower_x,num_steps*step:num_steps*step+image_size]
+    small_truth=truth[upper_x:lower_x,num_steps*step:num_steps*step+image_size]
+
+    return small_rgb, small_truth
 
 class Carla(keras.utils.Sequence):
     
@@ -33,6 +59,11 @@ class Carla(keras.utils.Sequence):
         return len(self.target_img_paths) // self.batch_size
 
     def data_augmentation(self, img : Image, labels : np.ndarray):
+            #50% chance of using the original 600x800 image or a smaller zoomed image
+        if randint(0,1):
+            img,labels=zoom(np.asarray(img, dtype="uint8"),labels)  #pass as nparray
+            img= Image.fromarray(np.uint8(img))     #move back to a PIL Image
+
         # 50% chance of flipping the image
         if randint(0,1):
             img = ImageOps.mirror(img)
