@@ -1,27 +1,49 @@
 
 
+# SEMANTIC_CATEGORIES = {
+#     0: "Unlabeled",
+#     1: "Buildings",
+#     2: "Traffic Sign/Lights",
+#     3: "Roads",
+#     4: "Road Lines",
+#     5: "Sidewalk",
+#     6: "Ground",
+#     7: "Vehicles",
+#     8: "Pedestrians",
+# }
+
 SEMANTIC_CATEGORIES = {
     0: "Unlabeled",
-    1: "Buildings",
-    2: "Traffic Sign/Lights",
-    3: "Roads",
-    4: "Road Lines",
-    5: "Sidewalk",
-    6: "Ground",
-    7: "Vehicles",
-    8: "Pedestrians",
+    1: "Traffic Sign/Lights",
+    2: "Roads",
+    3: "Road Lines",
+    4: "Sidewalk",
+    5: "Ground",
+    6: "Vehicles",
+    7: "Pedestrians",
 }
+
+# SEMANTIC_COLORS = {
+#     0: (0, 0, 0), # Unlabeled
+#     1: (255, 0, 0), # Buildings
+#     2: (220, 220, 0), # Traffic Sign/Lights
+#     3: (0, 255, 0),#(128, 64, 128), # Roads
+#     4: (157, 234, 50), # Road Lines
+#     5: (244, 35, 232), # Sidewalk
+#     6: (107, 142, 35), # Ground
+#     7: (0, 0, 255), # Vehicles
+#     8: (220, 20, 60), # Pedestrians
+# }
 
 SEMANTIC_COLORS = {
     0: (0, 0, 0), # Unlabeled
-    1: (255, 0, 0), # Buildings
-    2: (220, 220, 0), # Traffic Sign/Lights
-    3: (0, 255, 0),#(128, 64, 128), # Roads
-    4: (157, 234, 50), # Road Lines
-    5: (244, 35, 232), # Sidewalk
-    6: (107, 142, 35), # Ground
-    7: (0, 0, 255), # Vehicles
-    8: (220, 20, 60), # Pedestrians
+    1: (220, 220, 0), # Traffic Sign/Lights
+    2: (0, 255, 0),#(128, 64, 128), # Roads
+    3: (157, 234, 50), # Road Lines
+    4: (244, 35, 232), # Sidewalk
+    5: (107, 142, 35), # Ground
+    6: (0, 0, 255), # Vehicles
+    7: (220, 20, 60), # Pedestrians
 }
 
 
@@ -37,25 +59,50 @@ SEMANTIC_COLORS = {
 # labels, and below is the CARLA=> our labels mapping.
 # Thus irregardless if it's a dataset with 0-22 or 0-13, we can map it
 # back to this
+# CARLA_SEMANTIC_CATEGORY_MAPPINGS = {
+#     0: 0, # Unlabeled
+#     1: 1, # Building
+#     2: 1, # Fence
+#     3: 0, # Other
+#     4: 8, # Pedestrian
+#     5: 1, # Pole
+#     6: 4, # RoadLine
+#     7: 3, # Road
+#     8: 5, # SideWalk
+#     9: 0, # Vegetation
+#     10: 7, # Vehicles
+#     11: 1, # Wall
+#     12: 2, # TrafficSign
+#     13: 0, # Sky
+#     14: 6, # Ground
+#     15: 1, # Bridge
+#     16: 0, # RailTrack
+#     17: 1, # GuardRail
+#     18: 2, # TrafficLight
+#     19: 0, # Static
+#     20: 0, # Dynamic
+#     21: 6, # Water
+#     22: 6, # Terrain
+# }
 CARLA_SEMANTIC_CATEGORY_MAPPINGS = {
     0: 0, # Unlabeled
-    1: 1, # Building
-    2: 1, # Fence
+    1: 0, # Building
+    2: 0, # Fence
     3: 0, # Other
     4: 8, # Pedestrian
-    5: 1, # Pole
+    5: 0, # Pole
     6: 4, # RoadLine
     7: 3, # Road
     8: 5, # SideWalk
     9: 0, # Vegetation
     10: 7, # Vehicles
-    11: 1, # Wall
+    11: 0, # Wall
     12: 2, # TrafficSign
     13: 0, # Sky
     14: 6, # Ground
-    15: 1, # Bridge
+    15: 0, # Bridge
     16: 0, # RailTrack
-    17: 1, # GuardRail
+    17: 0, # GuardRail
     18: 2, # TrafficLight
     19: 0, # Static
     20: 0, # Dynamic
