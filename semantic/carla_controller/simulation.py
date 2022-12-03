@@ -220,8 +220,8 @@ class Simulation():
         camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
 
         camera_blueprint = self.blueprint_library.find('sensor.camera.rgb')
-        camera_blueprint.set_attribute("image_size_x", "1920")
-        camera_blueprint.set_attribute("image_size_y", "1440")
+        camera_blueprint.set_attribute("image_size_x", "800")
+        camera_blueprint.set_attribute("image_size_y", "600")
         camera_blueprint.set_attribute("motion_blur_intensity", str(0.0))
         camera_blueprint.set_attribute("blur_amount", str(0.0))
         camera = self.world.spawn_actor(camera_blueprint, camera_transform, attach_to=vehicle)
@@ -229,8 +229,8 @@ class Simulation():
         self.cameras.append(camera)
         
         semantic_camera_blueprint = self.blueprint_library.find('sensor.camera.semantic_segmentation')
-        camera_blueprint.set_attribute("image_size_x", "1920")
-        camera_blueprint.set_attribute("image_size_y", "1440")
+        camera_blueprint.set_attribute("image_size_x", "800")
+        camera_blueprint.set_attribute("image_size_y", "600")
         semantic_camera = self.world.spawn_actor(semantic_camera_blueprint, camera_transform, attach_to=vehicle)
         semantic_camera.listen(self._semantic_camera_listener)
         self.cameras.append(semantic_camera)
