@@ -131,3 +131,85 @@ def get_image_with_high_res_center(model, img : Image, zoom : float = 2, output_
     fi3.paste(final_image_cropped, offset)
     fi3.save(os.path.join(output_dir, "fi3.png"))
 
+def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4, output_dir: str = None) -> np.ndarray:
+    """
+
+    :param str output_dir: If it exists, same the images in this directory
+    """
+
+    if output_dir:
+        # Create the output directory if it does not exist
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+    # Get input size of network
+    input_size = model.layers[0].get_output_at(0).get_shape().as_list()
+    # input_size is a list with the following options:
+    # [batch_size (None), width, height, channels]. Really we just want
+    # width and height:
+    input_size = (input_size[1], input_size[2])
+
+    # Get the low res image as an input for the model
+    low_res_input = rgb_image_to_input(img, input_size=input_size)
+
+    # Make predictions of low- image
+    low_res_output_labels = model.predict(low_res_input)[0]
+
+    # Convert low-res model predictions into images
+    base_image = labels_to_image(low_res_output_labels, img.size)
+    if output_dir:
+        base_image.save(os.path.join(output_dir, "base_image.png"))
+    width, height = img.size
+    subsection_width = width/sub_sections
+    final_image = base_image
+    for i in range(sub_sections):
+        # print("Working on subection {}".format(i))
+        # Determine the crop points based on the zoom level
+        crop_points = (
+            int(subsection_width*i),
+            int((height-subsection_width)/2),
+            int(subsection_width*(i+1)),
+            int((height+subsection_width)/2),
+        )
+        print(crop_points)
+
+        # Crop the image to allow for a zoomed and higher resolution image and convert for model input
+        img_cropped = img.crop(crop_points)
+
+        high_res_input = rgb_image_to_input(img_cropped, input_size=input_size)
+
+        # Get the output of the high res image
+        high_res_output_labels = model.predict(high_res_input)[0]
+
+        # Get image of high res output
+        print(img_cropped.size)
+        overlay_image = labels_to_image(high_res_output_labels, img_cropped.size)
+
+        # Paste the cropped image into the center of the original image and save it
+        img_w, img_h = base_image.size
+        bg_w, bg_h = overlay_image.size
+        # offset = ((bg_w - img_w) // 2, (bg_h - img_h) // 2)
+        overlay_np = np.array(high_res_output_labels)  # Convert the labels into an np.array
+        # https://note.nkmk.me/en/python-pillow-composite/
+        # 0 is white, 255 is black.  White pixels will allow for overwrites
+        mask = np.argmax(high_res_output_labels, axis=-1)
+        mask = np.isin(mask, [1, 6, 7]).astype(int)*255  # only update pixels where the label value is specified
+        mask = resize(mask, overlay_image.size[::-1], order=0)
+
+        # Convert numpy mask to pillow image
+        mask_img = Image.fromarray(mask)
+        mask_img = mask_img.convert("RGBA")  # Convert to 4 channel RGBA, needed for paste below
+
+        if output_dir:
+            # Save component images
+            mask_img.save(os.path.join(output_dir, "mask_{}.png".format(i)))
+            overlay_image.save(os.path.join(output_dir, "overlay_image_{}.png".format(i)))
+
+        # Paste this overlay using the same crop points from above and save the image
+        final_image.paste(overlay_image, box=crop_points, mask=mask_img)
+        # final_image = Image.composite(final_image, overlay_image, box=crop_points, mask=im)
+
+        if output_dir:
+            final_image.save(os.path.join(output_dir, "fi3_{}.png".format(i)))
+
+    return final_image
