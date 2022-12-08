@@ -53,7 +53,7 @@ def train_unet(
     model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
 
     callbacks = [
-        keras.callbacks.ModelCheckpoint(f"{checkpoint_directory}/unet.h5", save_best_only=True)
+        keras.callbacks.ModelCheckpoint(f"{checkpoint_directory}/unet.h5", save_best_only=True),
         keras.callbacks.BackupAndRestore(backup_dir=f"{checkpoint_directory}/")
     ]
 
