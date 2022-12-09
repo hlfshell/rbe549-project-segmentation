@@ -70,7 +70,7 @@ def train_unet(
     # We use a sigmoid to compress our given class weights to a
     # 0-1 range. We multiply this by 2 to increase our range to
     # 0-2.
-    class_weight= [(2*sigmoid(x)) for x in class_weight]
+    class_weight = [(2*sigmoid(x)) for x in class_weight]
 
     model.compile(optimizer='rmsprop',
     loss=SparseCategoricalFocalLoss(
@@ -80,7 +80,8 @@ def train_unet(
 
     callbacks = [
         keras.callbacks.ModelCheckpoint(f"{checkpoint_directory}/unet.h5", save_best_only=True),
-        keras.callbacks.BackupAndRestore(backup_dir=f"{checkpoint_directory}/")
+        keras.callbacks.BackupAndRestore(backup_dir=f"{checkpoint_directory}/"),
+        keras.callbacks.TensorBoard(log_dir="./log_dir", histogram_freq=1)
     ]
 
     model.fit(training_generator, epochs=epochs, validation_data=validation_generator, callbacks=callbacks)
