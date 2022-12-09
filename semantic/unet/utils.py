@@ -168,7 +168,6 @@ def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4
             int(subsection_width*(i+1)),
             int((height+subsection_width)/2),
         )
-        print(crop_points)
 
         # Crop the image to allow for a zoomed and higher resolution image and convert for model input
         img_cropped = img.crop(crop_points)
