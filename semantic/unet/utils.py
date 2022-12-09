@@ -55,7 +55,7 @@ def labels_to_image(labels : np.ndarray, output_size : Optional[Tuple[int, int]]
     # ordered image, so we reverse the dimensions
     if output_size is not None and output_size != labels.shape:
         # mask = resize(mask, tuple(reversed(output_size)), order=0)
-        mask = resize(mask, output_size[::-1], order=0)
+        mask = resize(mask, output_size[::-1], order=0, preserve_range=True, anti_aliasing=False)
     
     # Next we convert the resized labels to an rgb set
     img = np.zeros(mask.shape[0:2] + (3,), dtype="uint8")
@@ -162,6 +162,7 @@ def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4
     width, height = img.size
     subsection_width = width/sub_sections
     final_image = base_image
+    # final_image = final_image.convert("RGBA")
     for i in range(sub_sections):
         # print("Working on subection {}".format(i))
         # Determine the crop points based on the zoom level
@@ -185,20 +186,18 @@ def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4
         print(img_cropped.size)
         overlay_image = labels_to_image(high_res_output_labels, img_cropped.size)
 
-        # Paste the cropped image into the center of the original image and save it
-        img_w, img_h = base_image.size
-        bg_w, bg_h = overlay_image.size
-        # offset = ((bg_w - img_w) // 2, (bg_h - img_h) // 2)
-        overlay_np = np.array(high_res_output_labels)  # Convert the labels into an np.array
-        # https://note.nkmk.me/en/python-pillow-composite/
+        # https://note.nkmk.me/en/python-pillow-composite/ -- only for images of the same size
+        # The paste functions allows us to specify a box to overlay the smaller image into
         # 0 is white, 255 is black.  White pixels will allow for overwrites
         mask = np.argmax(high_res_output_labels, axis=-1)
         mask = np.isin(mask, [1, 6, 7]).astype(int)*255  # only update pixels where the label value is specified
-        mask = resize(mask, overlay_image.size[::-1], order=0)
+        mask = resize(mask, overlay_image.size[::-1], order=0, preserve_range=True, anti_aliasing=False)
 
         # Convert numpy mask to pillow image
+        # mask = np.repeat(mask[:, :, np.newaxis], 4, axis=2)
         mask_img = Image.fromarray(mask)
-        mask_img = mask_img.convert("RGBA")  # Convert to 4 channel RGBA, needed for paste below
+        # mask_img = Image.fromarray(mask)
+        mask_img = mask_img.convert("1")  # Convert to 4 channel RGBA, needed for paste below
 
         if output_dir:
             # Save component images
