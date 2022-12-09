@@ -151,23 +151,6 @@ def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4
     base_labels = infer(model, img)
     base_label_image = labels_to_image(base_labels, img.size)
 
-    # # Get input size of network
-    # input_size = model.layers[0].get_output_at(0).get_shape().as_list()
-    # # input_size is a list with the following options:
-    # # [batch_size (None), width, height, channels]. Really we just want
-    # # width and height:
-    # input_size = (input_size[1], input_size[2])
-    #
-    # # Get the low res image as an input for the model
-    # low_res_input = rgb_image_to_input(img, input_size=input_size)
-    #
-    # # Make predictions of low- image
-    # low_res_output_labels = model.predict(low_res_input)[0]
-    #
-    # # Convert low-res model predictions into images
-    # base_image = labels_to_image(low_res_output_labels, img.size)
-
-    # Save the image if the output dir is specified
     if output_dir:
         base_label_image.save(os.path.join(output_dir, "base_image.png"))
 
