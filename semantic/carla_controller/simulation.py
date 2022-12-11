@@ -28,7 +28,7 @@ class Simulation():
         pedestrians : int = DEFAULT_PEDESTRIANS,
         pedestrian_cross_percentage : float = PEDESTRIAN_CROSSING_DEFAULT,
         hero_spawn_point = None,
-        weather_params = None
+        weather_params = None,
     ):
         if run_id is None:
             run_id = uuid4()
@@ -216,6 +216,20 @@ class Simulation():
         # Finally run the simulation
         self.run(time)
 
+    def record_movie_run(self, time : int):
+        # Spawn everything
+        self.spawn_everything()
+
+        # Wait for some amount of seconds to spawn the camera
+        # listeners; otherwise we'll have images of cars spawning
+        # in the middle of the air
+        sleep(CAMERA_START_DELAY)
+        self.attach_movie_camera(self.hero_vehicle)
+        self.start_recording()
+
+        # Finally run the simulation
+        self.run(time)
+
     def attach_camera(self, vehicle):
         camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
 
@@ -235,6 +249,18 @@ class Simulation():
         semantic_camera.listen(self._semantic_camera_listener)
         self.cameras.append(semantic_camera)
 
+    def attach_movie_camera(self, vehicle):
+        camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+
+        camera_blueprint = self.blueprint_library.find('sensor.camera.rgb')
+        camera_blueprint.set_attribute("image_size_x", "800")
+        camera_blueprint.set_attribute("image_size_y", "600")
+        camera_blueprint.set_attribute("motion_blur_intensity", str(0.0))
+        camera_blueprint.set_attribute("blur_amount", str(0.0))
+        camera = self.world.spawn_actor(camera_blueprint, camera_transform, attach_to=vehicle)
+        camera.listen(self._rgb_movie_camera_listener)
+        self.cameras.append(camera)
+
     def _rgb_camera_listener(self, image):
         if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY != 0):
             return
@@ -244,6 +270,9 @@ class Simulation():
         if (not self._recording) or (image.frame % FRAME_SELECTION_FREQUENCY != 0):
             return
         image.save_to_disk(f"{self.output_directory}/{self.run_id}/semantic/{image.frame}.png")
+
+    def _rgb_movie_camera_listener(self, image):
+        image.save_to_disk(f"{self.output_directory}/{self.run_id}/{image.frame}.png")
 
     def start_recording(self):
         self._recording = True
