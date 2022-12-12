@@ -1,6 +1,10 @@
 
 output/*
 dataset/*
+unet_model/*
+.idea/*
+unet.h5
+unet_512x512.h5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

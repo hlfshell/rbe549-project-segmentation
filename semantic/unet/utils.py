@@ -1,6 +1,7 @@
 from semantic.carla_controller.labels import SEMANTIC_COLORS
 
 import numpy as np
+import os
 
 from math import floor
 from PIL import Image
@@ -54,7 +55,7 @@ def labels_to_image(labels : np.ndarray, output_size : Optional[Tuple[int, int]]
     # ordered image, so we reverse the dimensions
     if output_size is not None and output_size != labels.shape:
         # mask = resize(mask, tuple(reversed(output_size)), order=0)
-        mask = resize(mask, output_size[::-1], order=0)
+        mask = resize(mask, output_size[::-1], order=0, preserve_range=True, anti_aliasing=False)
     
     # Next we convert the resized labels to an rgb set
     img = np.zeros(mask.shape[0:2] + (3,), dtype="uint8")
@@ -73,3 +74,74 @@ def overlay_labels_on_input(img: Image, labels : np.ndarray, alpha : float = 0.4
     labels_img.putalpha(floor(255 * alpha))
     print(img.size, labels_img.size)
     return Image.alpha_composite(img, labels_img)
+
+
+def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4, output_dir: str = None) -> Image:
+    """
+    Overwrite some classes with higher resolution images onto the labels image.
+
+    :param model: model to use for inference
+    :param Image img: Pillow Image
+    :param int sub_sections: number of sliding windows to use for higher resolution overwrites
+    :param str output_dir: If it exists, same the images in this directory
+    :return Image label_image:
+    """
+
+    # Save the image if the output dir is specified
+    if output_dir:
+        # Create the output directory if it does not exist
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+    base_labels = infer(model, img)
+    base_label_image = labels_to_image(base_labels, img.size)
+
+    if output_dir:
+        base_label_image.save(os.path.join(output_dir, "base_image.png"))
+
+    # Determine the width of each subsection
+    width, height = img.size
+    subsection_width = width/sub_sections
+
+    # For each subsection, get a higher res label and paste it over top the base label image for certain classes
+    for i in range(sub_sections):
+
+        # Determine the crop points based on the subsection dimensions
+        crop_points = (
+            int(subsection_width*i),
+            int((height-subsection_width)/2),
+            int(subsection_width*(i+1)),
+            int((height+subsection_width)/2),
+        )
+
+        # Crop the image to allow for a zoomed and higher resolution image and convert for model input
+        img_cropped = img.crop(crop_points)
+
+        # Get labels of high res subsection
+        overlay_labels = infer(model, img_cropped)
+        # Get image of high res output
+        overlay_labels_image = labels_to_image(overlay_labels, img_cropped.size)
+
+        # https://note.nkmk.me/en/python-pillow-composite/ -- only for images of the same size
+        # The paste functions allows us to specify a box to overlay the smaller image into
+        # 0 is white, 255 is black.  White pixels will allow for overwrites
+        mask = np.argmax(overlay_labels, axis=-1)
+        mask = np.isin(mask, [1, 6, 7]).astype(int)*255  # only update pixels where the label value is specified
+        mask = resize(mask, overlay_labels_image.size[::-1], order=0, preserve_range=True, anti_aliasing=False)
+
+        # Convert numpy mask to pillow image
+        mask_img = Image.fromarray(mask)
+        mask_img = mask_img.convert("1")  # Convert to 1 channel, needed for paste below
+
+        if output_dir:
+            # Save component images
+            mask_img.save(os.path.join(output_dir, "mask_{}.png".format(i)))
+            overlay_labels_image.save(os.path.join(output_dir, "overlay_image_{}.png".format(i)))
+
+        # Paste this overlay using the same crop points from above and save the image
+        base_label_image.paste(overlay_labels_image, box=crop_points, mask=mask_img)
+
+        if output_dir:
+            base_label_image.save(os.path.join(output_dir, "final_image_{}.png".format(i)))
+
+    return base_label_image
