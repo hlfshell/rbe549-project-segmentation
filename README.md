@@ -11,3 +11,12 @@ For the WPI graduate RBE549 Computer Vision course, our group chose semantic seg
 </p>
 
 In the end, we utilized a U-Net model trained with a sparse categorical cross entropy focal loss to adjust for a heavily imbalanced categorical representation and dataset balance.
+
+The performance of included models as we experimented with hyperparameters and loss methods are in the report and below:
+
+<p align="center">
+<img width="500px" src="performance_graph.png">
+</p>
+<p align="center">
+<img width="500px" src="performance_chart.png">
+</p>
