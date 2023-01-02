@@ -69,35 +69,38 @@ def labels_to_image(labels : np.ndarray, output_size : Optional[Tuple[int, int]]
 def overlay_labels_on_input(img: Image, labels : np.ndarray, alpha : float = 0.4) -> Image:
     labels_img = labels_to_image(labels, output_size=img.size).convert('RGBA')
 
+    return overlay_labels_img_on_input(img, labels_img, alpha)
+
+
+def overlay_labels_img_on_input(img: Image, labels_img: Image, alpha : float = 0.4) -> Image:
+    img = img.convert("RGBA")
     # Pillow expects alpha to be 0 (full transparency) to 255 (full opaque)
     # so convert our percentage to an integer
-    labels_img.putalpha(floor(255 * alpha))
-    print(img.size, labels_img.size)
+    alpha_setting = floor(255 * alpha)
+    labels_img.putalpha(alpha_setting)
+
+    # Let's remove all unlabeled pixels, which would otherwise darken the image as
+    # they are black
+    labels_img = np.array(labels_img, dtype="uint8")
+    labels_img[np.all(labels_img == (0, 0, 0, alpha_setting), axis=-1)] = (0,0,0,0)
+    labels_img = Image.fromarray(labels_img)
+
+    # Return the composite
     return Image.alpha_composite(img, labels_img)
 
 
-def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4, output_dir: str = None) -> Image:
+def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4) -> Image:
     """
     Overwrite some classes with higher resolution images onto the labels image.
 
     :param model: model to use for inference
     :param Image img: Pillow Image
     :param int sub_sections: number of sliding windows to use for higher resolution overwrites
-    :param str output_dir: If it exists, same the images in this directory
     :return Image label_image:
     """
 
-    # Save the image if the output dir is specified
-    if output_dir:
-        # Create the output directory if it does not exist
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
     base_labels = infer(model, img)
     base_label_image = labels_to_image(base_labels, img.size)
-
-    if output_dir:
-        base_label_image.save(os.path.join(output_dir, "base_image.png"))
 
     # Determine the width of each subsection
     width, height = img.size
@@ -126,22 +129,15 @@ def stitch_high_res_overlays_together(model, img : Image, sub_sections : int = 4
         # The paste functions allows us to specify a box to overlay the smaller image into
         # 0 is white, 255 is black.  White pixels will allow for overwrites
         mask = np.argmax(overlay_labels, axis=-1)
-        mask = np.isin(mask, [1, 6, 7]).astype(int)*255  # only update pixels where the label value is specified
+        mask = np.isin(mask, [1, 6, 7]).astype(np.uint8)*255  # only update pixels where the label value is specified
         mask = resize(mask, overlay_labels_image.size[::-1], order=0, preserve_range=True, anti_aliasing=False)
 
         # Convert numpy mask to pillow image
         mask_img = Image.fromarray(mask)
         mask_img = mask_img.convert("1")  # Convert to 1 channel, needed for paste below
 
-        if output_dir:
-            # Save component images
-            mask_img.save(os.path.join(output_dir, "mask_{}.png".format(i)))
-            overlay_labels_image.save(os.path.join(output_dir, "overlay_image_{}.png".format(i)))
-
         # Paste this overlay using the same crop points from above and save the image
         base_label_image.paste(overlay_labels_image, box=crop_points, mask=mask_img)
 
-        if output_dir:
-            base_label_image.save(os.path.join(output_dir, "final_image_{}.png".format(i)))
 
     return base_label_image
