@@ -9,7 +9,7 @@ def main(filepath, output_dir, sub_sections):
     # model = load_model("../unet.h5")
     model = load_model("../unet_512x512.h5")
     img = Image.open(filepath)
-    stitch_high_res_overlays_together(model, img, sub_sections=sub_sections, output_dir=output_dir)
+    stitch_high_res_overlays_together(model, img, sub_sections=sub_sections)
 
 
 if __name__ == "__main__":
